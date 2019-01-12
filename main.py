@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.autograd import Variable
-
+import torchvision.transforms as transforms
 import dataset
 from prune import *
 from heapq import nsmallest
@@ -123,8 +123,37 @@ class FilterPrunner:
     
 class PrunningFineTuner_CNN:
     def __init__(self, model):
-        self.train_data_loader = dataset.trainloader()
-        self.test_data_loader = dataset.testloader()
+
+        import torch.utils.data as data
+        import torchvision.datasets as datasets
+        transform_train = transforms.Compose([
+            transforms.RandomCrop(32, padding=4),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+        ])
+
+        transform_test = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+        ])
+
+        self.train_data_loader = data.DataLoader(
+            datasets.ImageFolder('./all/train',
+                                 transform_train),
+            batch_size=10,
+            shuffle=True,
+            num_workers=0,
+            pin_memory=True)
+
+        self.test_data_loader = data.DataLoader(
+            datasets.ImageFolder('./all/test',
+                                 transform_train),
+            batch_size=10,
+            shuffle=True,
+            num_workers=0,
+            pin_memory=True)
+
         
         self.model = model
         self.criterion = torch.nn.CrossEntropyLoss()
@@ -260,8 +289,8 @@ fine_tuner.train(optimizer = opt, epoches = 15)
 
 torch.save(model, "model")
 """
-
-model = torch.load("model").cuda()
+model = CNN().cuda()
+# model = torch.load("model").cuda()
 fine_tuner = PrunningFineTuner_CNN(model)
 Acc, Layers_Prunned = fine_tuner.prune()
 
