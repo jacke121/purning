@@ -48,7 +48,7 @@ class CNN(nn.Module):
 
 
 
-model = torch.load("model_prunned_4").cuda()
+model = torch.load("model_prunned_4")
 
 model.eval()
 correct = 0
@@ -73,9 +73,9 @@ train_data_loader = data.DataLoader(
 
 for j in range(10):
     for i, (batch, label) in enumerate(train_data_loader):
-        batch = batch.cuda()
+        batch = batch
         start=time.time()
-        output = model(Variable(batch))
+        output = model(batch)
         pred = output.data.max(1)[1]
         print('time',time.time()-start)
         print(pred)
